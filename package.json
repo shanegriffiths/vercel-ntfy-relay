@@ -1,0 +1,6 @@
+{
+  "name": "vercel-ntfy-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker relay: Vercel deploy webhooks → ntfy push notifications"
+}
