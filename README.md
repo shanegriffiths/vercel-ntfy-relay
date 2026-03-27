@@ -42,7 +42,7 @@ Each notification shows the branch name, target (preview/production), and first 
 ### 1. Clone and run the setup script
 
 ```bash
-git clone https://github.com/studiobrio/vercel-ntfy-relay.git
+git clone https://github.com/shanegriffiths/vercel-ntfy-relay.git
 cd vercel-ntfy-relay
 chmod +x macos/setup.sh
 ./macos/setup.sh
