@@ -139,6 +139,26 @@ No extra setup needed — the Worker extracts the project name from Vercel's pay
 | SSL error hitting Worker | New worker subdomains take 2-3 minutes to provision SSL. Wait and retry |
 | No custom icon | Verify `~/.config/ntfy-icons/vercel-circle.png` exists. alerter's icon support uses a private API |
 
+## LLM setup prompt
+
+Want to set this up using an AI coding assistant (Claude Code, Cursor, etc.)? Use this prompt:
+
+> **Set up native macOS notifications for Vercel deployments.**
+>
+> Use the reference implementation at https://github.com/shanegriffiths/vercel-ntfy-relay — it contains the Cloudflare Worker code, macOS notification handler script, ntfy config, launchd plist, and a one-command setup script.
+>
+> I want native macOS Notification Centre alerts whenever a Vercel deployment succeeds, fails, or is cancelled. The notification should show a circular Vercel logo icon, the project name, branch, target (preview/production), and first line of the commit message. It should have a "View Deploy" button that opens the deployment URL in my browser and a "Dismiss" button. Different sounds for success (Glass), failure (Basso), and cancelled (Funk).
+>
+> **Architecture:** Vercel webhook → Cloudflare Worker (parses JSON, formats with emojis) → ntfy.sh (free pub/sub broker) → ntfy CLI subscriber (macOS launchd agent) → alerter (native notification with custom icon and action buttons).
+>
+> **Setup steps:**
+> 1. Clone the repo and run `macos/setup.sh` — installs ntfy + alerter via Homebrew, downloads Vercel icon, configures subscriber, starts launchd agent
+> 2. Install Wrangler (`npm install -g wrangler`), log in (`wrangler login`), `cp wrangler.toml.example wrangler.toml`, set your `account_id` and `NTFY_TOPIC`, deploy with `wrangler deploy`
+> 3. Add the Worker URL as a webhook in Vercel dashboard (Settings → Webhooks) for `deployment.succeeded` and `deployment.error` events
+> 4. The same Worker URL works across multiple Vercel accounts
+>
+> **Key gotchas the repo already handles:** ntfy topics are public (random hex suffix for privacy), HTTP headers can't contain emoji (Worker uses JSON publishing API instead), alerter uses kebab-case flags (`--close-label` not `--closeLabel`), macOS Big Sur+ renders actions in an "Options" dropdown not inline buttons (system limitation), launchd agent needs explicit PATH and HOME environment variables to find alerter.
+
 ## License
 
 MIT
