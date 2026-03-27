@@ -57,9 +57,17 @@ npm install -g wrangler
 wrangler login
 ```
 
+Copy the example config and fill in your values:
+
+```bash
+cp wrangler.toml.example wrangler.toml
+```
+
 Edit `wrangler.toml`:
 - Set `account_id` to your Cloudflare account ID (find with `wrangler whoami`)
 - Set `NTFY_TOPIC` to the topic name from step 1
+
+`wrangler.toml` is gitignored — your secrets stay local.
 
 ```bash
 wrangler deploy
