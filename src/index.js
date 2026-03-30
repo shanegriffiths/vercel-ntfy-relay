@@ -56,9 +56,14 @@ export default {
 			ntfyPayload.click = deployUrl;
 		}
 
+		const headers = { "Content-Type": "application/json" };
+		if (env.NTFY_TOKEN) {
+			headers["Authorization"] = `Bearer ${env.NTFY_TOKEN}`;
+		}
+
 		const ntfyResponse = await fetch("https://ntfy.sh", {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
+			headers,
 			body: JSON.stringify(ntfyPayload),
 		});
 
