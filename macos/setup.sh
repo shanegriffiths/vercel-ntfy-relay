@@ -47,11 +47,13 @@ else
   echo "ImageMagick not found — using square icon (install with: brew install imagemagick)"
 fi
 
-# 4. Install handler script
+# 4. Install handler script and network wrapper
 echo ""
 echo "Installing notification handler..."
 cp macos/notify-deploy.sh ~/.config/ntfy-icons/notify-deploy.sh
 chmod +x ~/.config/ntfy-icons/notify-deploy.sh
+cp macos/ntfy-wait-for-network.sh ~/.config/ntfy-icons/ntfy-wait-for-network.sh
+chmod +x ~/.config/ntfy-icons/ntfy-wait-for-network.sh
 
 # 5. Configure ntfy subscriber
 echo ""
