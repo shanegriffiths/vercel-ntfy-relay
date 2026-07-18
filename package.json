@@ -1,6 +1,8 @@
 {
-  "name": "vercel-ntfy-relay",
+  "name": "shipbell",
   "version": "1.0.0",
   "private": true,
-  "description": "Cloudflare Worker relay: Vercel deploy webhooks → ntfy push notifications"
+  "type": "module",
+  "license": "MIT",
+  "description": "Native macOS notifications for your Vercel deploys: webhook → Cloudflare Worker → ntfy → Notification Centre"
 }

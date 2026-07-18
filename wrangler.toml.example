@@ -1,4 +1,4 @@
-name = "vercel-ntfy-relay"
+name = "shipbell"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
@@ -7,4 +7,11 @@ account_id = "YOUR_ACCOUNT_ID"
 
 [vars]
 # Replace with your secret ntfy topic name (generate with: openssl rand -hex 6)
-NTFY_TOPIC = "vercel-deploy-CHANGE-ME"
+NTFY_TOPIC = "shipbell-CHANGE-ME"
+
+# Optional: self-hosted ntfy server (defaults to https://ntfy.sh)
+# NTFY_URL = "https://ntfy.example.com"
+
+# Secrets — set these via Wrangler, never in this file:
+#   wrangler secret put VERCEL_WEBHOOK_SECRET   (required — shown once when you create the webhook in Vercel)
+#   wrangler secret put NTFY_TOKEN              (optional — ntfy access token for protected topics or rate limits)

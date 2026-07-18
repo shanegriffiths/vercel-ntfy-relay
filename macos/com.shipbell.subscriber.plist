@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  ntfy subscriber launch agent for macOS
-  Copy to: ~/Library/LaunchAgents/sh.ntfy.subscriber.plist
+  Shipbell ntfy subscriber launch agent for macOS
+  Copy to: ~/Library/LaunchAgents/com.shipbell.subscriber.plist
 
-  Replace /Users/YOUR_USERNAME with your actual home directory (in both places).
+  Replace /Users/YOUR_USERNAME with your actual home directory (in all places).
 
-  Load:   launchctl load ~/Library/LaunchAgents/sh.ntfy.subscriber.plist
-  Unload: launchctl unload ~/Library/LaunchAgents/sh.ntfy.subscriber.plist
-  Status: launchctl list | grep ntfy
+  Load:   launchctl load ~/Library/LaunchAgents/com.shipbell.subscriber.plist
+  Unload: launchctl unload ~/Library/LaunchAgents/com.shipbell.subscriber.plist
+  Status: launchctl list | grep shipbell
 -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>sh.ntfy.subscriber</string>
+    <string>com.shipbell.subscriber</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/YOUR_USERNAME/.config/ntfy-icons/ntfy-wait-for-network.sh</string>
+        <string>/Users/YOUR_USERNAME/.config/shipbell/ntfy-wait-for-network.sh</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>
@@ -31,8 +31,8 @@
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/tmp/ntfy-subscriber.log</string>
+    <string>/Users/YOUR_USERNAME/Library/Logs/shipbell.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/ntfy-subscriber.err</string>
+    <string>/Users/YOUR_USERNAME/Library/Logs/shipbell.err</string>
 </dict>
 </plist>

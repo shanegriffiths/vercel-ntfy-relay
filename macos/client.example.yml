@@ -2,10 +2,10 @@
 # Copy to: ~/Library/Application Support/ntfy/client.yml
 #
 # Replace YOUR_TOPIC_NAME with your secret topic
-# (generate with: openssl rand -hex 6, then prefix with vercel-deploy-)
+# (generate with: openssl rand -hex 6, then prefix with shipbell-)
 
 default-host: https://ntfy.sh
 
 subscribe:
   - topic: YOUR_TOPIC_NAME
-    command: '$HOME/.config/ntfy-icons/notify-deploy.sh &'
+    command: '$HOME/.config/shipbell/notify-deploy.sh &'
