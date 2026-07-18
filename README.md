@@ -1,5 +1,7 @@
 # Shipbell 🔔
 
+[![Release](https://img.shields.io/github/v/release/shanegriffiths/shipbell)](https://github.com/shanegriffiths/shipbell/releases) [![Licence](https://img.shields.io/github/license/shanegriffiths/shipbell)](LICENSE)
+
 A ship's bell for when you ship. Native macOS Notification Centre alerts for your Vercel deployments, with custom icons, action buttons, and distinct sounds for success, failure, and cancellation.
 
 ![notification-demo](https://github.com/user-attachments/assets/placeholder)
