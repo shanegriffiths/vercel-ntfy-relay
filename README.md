@@ -33,7 +33,9 @@ Vercel webhook → Cloudflare Worker → ntfy.sh → ntfy CLI (macOS) → alerte
 
 Each notification shows the branch name, target (preview/production), and first line of the commit message. Clicking "View Deploy" opens the deployment URL in your browser.
 
-## Quick setup
+## Setup
+
+Three routes in: the one-command script, doing the Mac side by hand, or handing the whole job to an AI assistant. They all end in the same place.
 
 ### Prerequisites
 
@@ -43,7 +45,7 @@ Each notification shows the branch name, target (preview/production), and first 
 - A [Cloudflare account](https://dash.cloudflare.com) (free)
 - A Vercel account (any plan)
 
-### 1. Clone and run the setup script
+### 1. Set up the Mac side
 
 ```bash
 git clone https://github.com/shanegriffiths/shipbell.git
@@ -53,6 +55,26 @@ chmod +x macos/setup.sh
 ```
 
 This installs ntfy and alerter, downloads the Vercel icon, configures the subscriber, and starts the background agent. It outputs a random topic name. Save it, you'll need it in the next step.
+
+<details>
+<summary><strong>Prefer to do it by hand?</strong></summary>
+
+1. Install the tools: `brew install ntfy` and `brew install vjeantet/tap/alerter`
+2. Generate a secret topic and note it down: `echo "shipbell-$(openssl rand -hex 6)"`
+3. Copy the files into place:
+
+| File | Destination |
+|---|---|
+| `macos/notify-deploy.sh` | `~/.config/shipbell/notify-deploy.sh` |
+| `macos/ntfy-wait-for-network.sh` | `~/.config/shipbell/ntfy-wait-for-network.sh` |
+| `macos/client.example.yml` | `~/Library/Application Support/ntfy/client.yml` |
+| `macos/com.shipbell.subscriber.plist` | `~/Library/LaunchAgents/com.shipbell.subscriber.plist` |
+
+4. Make both scripts executable (`chmod +x`), put your topic in `client.yml`, and replace `/Users/YOUR_USERNAME` with your home directory in the plist
+5. Drop any 180x180 PNG at `~/.config/shipbell/vercel-circle.png` for the notification icon
+6. Start the agent: `launchctl load ~/Library/LaunchAgents/com.shipbell.subscriber.plist`
+
+</details>
 
 ### 2. Deploy the Cloudflare Worker
 
@@ -102,6 +124,28 @@ ntfy publish --title "✅ my-app deployed" YOUR_TOPIC "🌱 main  →  productio
 
 Or push a commit to any connected Vercel project and wait for the deploy.
 
+### Or: hand it to an AI assistant
+
+Working with Claude Code, Cursor, or similar? Paste this prompt and it will do the setup for you, pausing where your input is genuinely needed (browser logins and the webhook secret):
+
+> **Set up Shipbell: native macOS notifications for Vercel deployments.**
+>
+> Use the reference implementation at https://github.com/shanegriffiths/shipbell. It contains the Cloudflare Worker code, macOS notification handler script, ntfy config, launchd plist, and a one-command setup script.
+>
+> I want native macOS Notification Centre alerts whenever a Vercel deployment succeeds, fails, or is cancelled. The notification should show a circular Vercel logo icon, the project name, branch, target (preview/production), and first line of the commit message. It should have a "View Deploy" button that opens the deployment URL in my browser and a "Dismiss" button. Different sounds for success (Glass), failure (Basso), and cancelled (Funk).
+>
+> **Architecture:** Vercel webhook → Cloudflare Worker (verifies signature, formats message) → ntfy.sh (free pub/sub broker) → ntfy CLI subscriber (macOS launchd agent) → alerter (native notification with custom icon and action buttons).
+>
+> **Setup steps:**
+> 1. Clone the repo and run `macos/setup.sh` (installs ntfy and alerter via Homebrew, downloads the Vercel icon, configures the subscriber, starts the launchd agent). Note the random topic name it prints
+> 2. Install Wrangler (`npm install -g wrangler`) and log in: `wrangler login` opens a browser, so I need to approve that myself. Then `cp wrangler.toml.example wrangler.toml`, set `account_id` (from `wrangler whoami`) and `NTFY_TOPIC` to the topic from step 1, and deploy with `wrangler deploy`
+> 3. Add the Worker URL as a webhook in the Vercel dashboard (Settings → Webhooks) for deployment succeeded, error, and canceled events. Vercel shows the webhook secret exactly once at creation, so remind me to copy it right away. Store it with `wrangler secret put VERCEL_WEBHOOK_SECRET` (required: the Worker rejects unsigned requests)
+> 4. Verify: `ntfy publish --title "Test" <topic> "Hello"` should pop a native notification. A real deploy tests the full chain
+>
+> **Gotchas the repo already handles:** webhook signature verification is mandatory (HMAC-SHA1, constant-time compare), ntfy topics are public (the random hex suffix is what keeps yours private), HTTP headers can't contain emoji (the Worker uses ntfy's JSON publishing API instead), alerter uses kebab-case flags (`--close-label` not `--closeLabel`), macOS Big Sur+ renders actions in an "Options" dropdown not inline buttons (system limitation), the launchd agent needs explicit PATH and HOME environment variables to find alerter, and the subscriber restarts every 10 minutes because macOS sleep/wake silently kills the HTTP stream.
+>
+> **Gotchas for you, the agent:** `wrangler login` and `wrangler secret put` are interactive and will hang a sandboxed shell. Ask me to run the login myself, and store the secret either by having me paste it into `wrangler secret put VERCEL_WEBHOOK_SECRET` in my own terminal, or non-interactively via `wrangler secret bulk` with a JSON file of `{"VERCEL_WEBHOOK_SECRET":"..."}` (delete the file afterwards). Run deploys with `CI=true` so Wrangler never blocks on a prompt. If no notification appears after setup, check System Settings → Notifications → Terminal is allowed with the "Persistent" alert style.
+
 ## Security
 
 - **Webhook signatures are verified and required.** Every request must carry a valid `x-vercel-signature` (HMAC-SHA1 over the raw body, compared in constant time). Without the secret configured, the Worker returns an error rather than relaying anything. This stops anyone who finds your Worker URL from pushing fake notifications to your Mac.
@@ -109,17 +153,6 @@ Or push a commit to any connected Vercel project and wait for the deploy.
 - **ntfy topics are public by design.** Anyone who guesses the name can read or write to a topic, which is why the setup script generates a random hex suffix. For stricter control, use [ntfy access tokens](https://docs.ntfy.sh/publish/#access-tokens): reserve the topic, then `wrangler secret put NTFY_TOKEN` so the Worker authenticates when publishing.
 - **The click URL is validated on the Mac.** The notification handler only passes `https://` URLs to `open`, so a message with a `file://` or custom app scheme goes nowhere.
 - **Secrets never live in the repo.** `wrangler.toml` is gitignored; the webhook secret and ntfy token are stored as Wrangler secrets, not vars.
-
-## Manual setup
-
-If you prefer not to use the setup script, see the individual config files in the `macos/` directory:
-
-| File | Destination |
-|---|---|
-| `macos/notify-deploy.sh` | `~/.config/shipbell/notify-deploy.sh` |
-| `macos/ntfy-wait-for-network.sh` | `~/.config/shipbell/ntfy-wait-for-network.sh` |
-| `macos/client.example.yml` | `~/Library/Application Support/ntfy/client.yml` |
-| `macos/com.shipbell.subscriber.plist` | `~/Library/LaunchAgents/com.shipbell.subscriber.plist` |
 
 ## Customisation
 
@@ -161,26 +194,6 @@ No extra setup needed. The Worker extracts the project name from Vercel's payloa
 | Rate limited by ntfy.sh | Free tier is ~250 msgs/day. Wait for the daily reset, use a [paid plan](https://ntfy.sh/#pricing), or set an `NTFY_TOKEN` |
 | SSL error hitting Worker | New worker subdomains take 2-3 minutes to provision SSL. Wait and retry |
 | No custom icon | Verify `~/.config/shipbell/vercel-circle.png` exists. alerter's icon support uses a private API |
-
-## LLM setup prompt
-
-Want to set this up using an AI coding assistant (Claude Code, Cursor, and friends)? Use this prompt:
-
-> **Set up Shipbell: native macOS notifications for Vercel deployments.**
->
-> Use the reference implementation at https://github.com/shanegriffiths/shipbell. It contains the Cloudflare Worker code, macOS notification handler script, ntfy config, launchd plist, and a one-command setup script.
->
-> I want native macOS Notification Centre alerts whenever a Vercel deployment succeeds, fails, or is cancelled. The notification should show a circular Vercel logo icon, the project name, branch, target (preview/production), and first line of the commit message. It should have a "View Deploy" button that opens the deployment URL in my browser and a "Dismiss" button. Different sounds for success (Glass), failure (Basso), and cancelled (Funk).
->
-> **Architecture:** Vercel webhook → Cloudflare Worker (verifies signature, formats message) → ntfy.sh (free pub/sub broker) → ntfy CLI subscriber (macOS launchd agent) → alerter (native notification with custom icon and action buttons).
->
-> **Setup steps:**
-> 1. Clone the repo and run `macos/setup.sh` (installs ntfy and alerter via Homebrew, downloads the Vercel icon, configures the subscriber, starts the launchd agent)
-> 2. Install Wrangler (`npm install -g wrangler`), log in (`wrangler login`), `cp wrangler.toml.example wrangler.toml`, set your `account_id` and `NTFY_TOPIC`, deploy with `wrangler deploy`
-> 3. Add the Worker URL as a webhook in Vercel (Settings → Webhooks) for deployment succeeded, error, and cancelled events, then store the secret Vercel shows you: `wrangler secret put VERCEL_WEBHOOK_SECRET` (required: the Worker rejects unsigned requests)
-> 4. The same Worker URL works across multiple Vercel accounts sharing that secret
->
-> **Key gotchas the repo already handles:** webhook signature verification is mandatory (HMAC-SHA1, constant-time compare), ntfy topics are public (random hex suffix for privacy), HTTP headers can't contain emoji (the Worker uses ntfy's JSON publishing API instead), alerter uses kebab-case flags (`--close-label` not `--closeLabel`), macOS Big Sur+ renders actions in an "Options" dropdown not inline buttons (system limitation), the launchd agent needs explicit PATH and HOME environment variables to find alerter, and the subscriber restarts every 10 minutes because macOS sleep/wake silently kills the HTTP stream.
 
 ## License
 
