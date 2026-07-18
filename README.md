@@ -4,7 +4,7 @@
 
 A ship's bell for when you ship. Native macOS Notification Centre alerts for your Vercel deployments, with custom icons, action buttons, and distinct sounds for success, failure, and cancellation.
 
-![notification-demo](https://github.com/user-attachments/assets/placeholder)
+![Shipbell notification demo](assets/demo.gif)
 
 ## Why this exists
 
